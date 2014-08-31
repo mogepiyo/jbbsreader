@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 // The URL formats to send requests to.
@@ -31,6 +32,29 @@ var (
 	datRegexp     = regexp.MustCompile(datPattern)
 )
 
+// The global rate per minute limit for requests to JBBS.
+var ratePerMinuteLimit = 3
+
+func init() {
+	Init(ratePerMinuteLimit)
+}
+
+var rpmThrottle chan bool
+
+// Init sets JBBS requests rate per limit.
+func Init(rpm int) {
+	rpmThrottle = make(chan bool)
+	go func() {
+		for _ = range time.Tick(time.Minute / time.Duration(rpm)) {
+			select {
+			case rpmThrottle <- true:
+			default:
+			}
+		}
+	}()
+}
+
+// datEncoding specifies the encoding the JBBS response is in.
 var datEncoding = japanese.EUCJP
 
 // Board represents a JBBS board whose URL is 'http://jbbs.shitaraba.net/[category]/[id]/'.
@@ -161,6 +185,7 @@ func newResponse(parent *Thread, line string) *Response {
 // getLines sends a HTTP GET request to the url, and returns a slice of lines of the response.
 // This is a var so to stub it in tests.
 var getLines = func(url string) ([]string, error) {
+	<-rpmThrottle
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
