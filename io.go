@@ -1,12 +1,12 @@
 package jbbsreader
 
 import (
-  "time"
-  "net/http"
+	"bufio"
 	"code.google.com/p/go.text/encoding/japanese"
-  "code.google.com/p/go.text/transform"
-  "bufio"
-  "io"
+	"code.google.com/p/go.text/transform"
+	"io"
+	"net/http"
+	"time"
 )
 
 // The global rate per minute limit for requests to JBBS.
