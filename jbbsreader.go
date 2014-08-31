@@ -3,15 +3,9 @@
 package jbbsreader
 
 import (
-	"bufio"
-	"code.google.com/p/go.text/encoding/japanese"
-	"code.google.com/p/go.text/transform"
 	"fmt"
-	"io"
-	"net/http"
 	"regexp"
 	"strconv"
-	"time"
 )
 
 // The URL formats to send requests to.
@@ -31,31 +25,6 @@ var (
 	subjectRegexp = regexp.MustCompile(subjectPattern)
 	datRegexp     = regexp.MustCompile(datPattern)
 )
-
-// The global rate per minute limit for requests to JBBS.
-var ratePerMinuteLimit = 3
-
-func init() {
-	Init(ratePerMinuteLimit)
-}
-
-var rpmThrottle chan bool
-
-// Init sets JBBS requests rate per limit.
-func Init(rpm int) {
-	rpmThrottle = make(chan bool)
-	go func() {
-		for _ = range time.Tick(time.Minute / time.Duration(rpm)) {
-			select {
-			case rpmThrottle <- true:
-			default:
-			}
-		}
-	}()
-}
-
-// datEncoding specifies the encoding the JBBS response is in.
-var datEncoding = japanese.EUCJP
 
 // Board represents a JBBS board whose URL is 'http://jbbs.shitaraba.net/[category]/[id]/'.
 type Board struct {
@@ -180,39 +149,4 @@ func newResponse(parent *Thread, line string) *Response {
 		threadTitle:  parts[6],
 		AuthorID:     parts[7],
 	}
-}
-
-// getLines sends a HTTP GET request to the url, and returns a slice of lines of the response.
-// This is a var so to stub it in tests.
-var getLines = func(url string) ([]string, error) {
-	<-rpmThrottle
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Read and transform to UTF-8 encoding.
-	r := transform.NewReader(resp.Body, datEncoding.NewDecoder())
-	ls, err := lines(r)
-	if err != nil {
-		return nil, err
-	}
-
-	return ls, nil
-}
-
-// lines reads each non-empty line from r, with no EOL markers such as CR, LF, and CR+LF.
-func lines(r io.Reader) (ls []string, _ error) {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		l := scanner.Text()
-		if len(l) > 0 {
-			ls = append(ls, l)
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return ls, nil
 }
