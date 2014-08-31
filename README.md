@@ -1,4 +1,4 @@
 jbbs-reader
 ===========
 
-Library to occasionally read from a JBBS board. 
+Library to read from a JBBS board. 
