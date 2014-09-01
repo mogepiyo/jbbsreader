@@ -1,8 +1,8 @@
 package jbbsreader
 
 import (
-	"reflect"
 	"testing"
+  "github.com/kylelemons/godebug/pretty"
 )
 
 func TestNewBoard(t *testing.T) {
@@ -71,9 +71,9 @@ func TestThreads(t *testing.T) {
 			continue
 		}
 		got := threads[0]
-		if !reflect.DeepEqual(got, tc.want) {
-			t.Errorf("%s: got %v, want %v", tc.desc, got, tc.want)
-		}
+    if cmp := pretty.Compare(got, tc.want); cmp != "" {
+      t.Errorf("threads differ:\n%s", cmp)
+    }
 	}
 }
 
@@ -142,21 +142,21 @@ func TestResponses(t *testing.T) {
 		swapGetLines(func(url string) ([]string, error) {
 			return []string{tc.in}, nil
 		})
-		threads, err := th.Responses()
+		responses, err := th.Responses()
 		if err != nil {
 			if !tc.wantErr {
 				t.Errorf("%s: err: %v", tc.desc, err)
 			}
 			continue
 		}
-		if len(threads) != 1 {
-			t.Errorf("%s: len(threads) %v, want 1", tc.desc, len(threads))
+		if len(responses) != 1 {
+			t.Errorf("%s: len(responses) %v, want 1", tc.desc, len(responses))
 			continue
 		}
-		got := threads[0]
-		if !reflect.DeepEqual(got, tc.want) {
-			t.Errorf("%s: got %v, want %v", tc.desc, got, tc.want)
-		}
+		got := responses[0]
+    if cmp := pretty.Compare(got, tc.want); cmp != "" {
+      t.Errorf("responses differ:\n%s", cmp)
+    }
 	}
 }
 
