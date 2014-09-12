@@ -1,5 +1,4 @@
-// Package jbbsreader provides functionality for reading from a specified JBBS board and feeding
-// updated responses to a chan.
+// Package jbbsreader provides functionality for reading from a specified JBBS board.
 package jbbsreader
 
 import (
@@ -62,6 +61,25 @@ func (b *Board) Threads() (threads []*Thread, _ error) {
 	}
 
 	return threads, nil
+}
+
+// Responses returns the list of responses in all threads of the board.
+// b.Category and b.ID must be set.
+func (b *Board) Responses() (responses []*Response, _ error) {
+  threads, err := b.Threads()
+  if err != nil {
+    return nil, err
+  }
+
+  for _, t := range threads {
+    rs, err := t.Responses()
+    if err != nil {
+      return nil, err
+    }
+    responses = append(responses, rs...)
+  }
+
+  return
 }
 
 // Thread represents the thread that can be accessed by the following URL.
