@@ -69,16 +69,16 @@ func lines(r io.Reader) (ls []string, _ error) {
 	for scanner.Scan() {
 		l := scanner.Bytes()
 		if len(l) == 0 {
-      continue
+			continue
 		}
 
-    bs, n, err := transform.Bytes(datEncoding.NewDecoder(), l)
-    if err != nil {
-      log.Printf("Could not convert EUC string %q to UTF-8, position %v: %v. Ignored.", string(l), n, err)
-      continue
-    }
+		bs, n, err := transform.Bytes(datEncoding.NewDecoder(), l)
+		if err != nil {
+			log.Printf("Could not convert EUC string %q to UTF-8, position %v: %v. Ignored.", string(l), n, err)
+			continue
+		}
 
-    ls = append(ls, string(bs))
+		ls = append(ls, string(bs))
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
