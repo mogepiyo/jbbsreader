@@ -65,7 +65,7 @@ func (b *Board) Threads() (threads []*Thread, _ error) {
 
 // FeedNewResponses continuously feeds new responses in all threads of the board to the chan.
 // b.Category and b.ID must be set.
-func (b *Board) FeedNewResponses() (<-chan *Response, <-chan error) {
+func (b *Board) FeedNewResponses(done <-chan struct{}) (<-chan *Response, <-chan error) {
 	resp, errc := make(chan *Response), make(chan error, 1)
 
 	go func() {
@@ -77,7 +77,7 @@ func (b *Board) FeedNewResponses() (<-chan *Response, <-chan error) {
 		known := make(map[string]bool)
 
 		// Load initial known responses.
-		respChan, errChan := b.FeedResponsesOnce()
+		respChan, errChan := b.FeedResponsesOnce(done)
 		for r := range respChan {
 			known[key(r)] = true
 		}
@@ -88,11 +88,15 @@ func (b *Board) FeedNewResponses() (<-chan *Response, <-chan error) {
 
 		// Poll JBBS and emit unknown responses.
 		for {
-			respChan, errChan = b.FeedResponsesOnce()
+			respChan, errChan = b.FeedResponsesOnce(done)
 			for r := range respChan {
 				if !known[key(r)] {
 					known[key(r)] = true
-					resp <- r
+					select {
+					case resp <- r:
+					case <-done:
+						return
+					}
 				}
 			}
 			if err := <-errChan; err != nil {
@@ -107,7 +111,7 @@ func (b *Board) FeedNewResponses() (<-chan *Response, <-chan error) {
 
 // FeedResponsesOnce reads all responses in all threads of the board to the chan.
 // b.Category and b.ID must be set.
-func (b *Board) FeedResponsesOnce() (<-chan *Response, <-chan error) {
+func (b *Board) FeedResponsesOnce(done <-chan struct{}) (<-chan *Response, <-chan error) {
 	resp, errc := make(chan *Response), make(chan error, 1)
 
 	go func() {
@@ -130,7 +134,11 @@ func (b *Board) FeedResponsesOnce() (<-chan *Response, <-chan error) {
 			}
 
 			for _, r := range responses {
-				resp <- r
+				select {
+				case resp <- r:
+				case <-done:
+					return
+				}
 			}
 		}
 	}()
