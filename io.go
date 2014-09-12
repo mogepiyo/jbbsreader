@@ -5,6 +5,7 @@ import (
 	"code.google.com/p/go.text/encoding/japanese"
 	"code.google.com/p/go.text/transform"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -45,15 +46,16 @@ func SetGlobalRateLimitRPM(rpm int, burst int) {
 // This is a var so to stub it in tests.
 var getLines = func(url string) ([]string, error) {
 	<-rpmThrottle
+
+	log.Printf("GET %s\n", url)
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	// Read and transform to UTF-8 encoding.
-	r := transform.NewReader(resp.Body, datEncoding.NewDecoder())
-	ls, err := lines(r)
+	ls, err := lines(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -65,10 +67,18 @@ var getLines = func(url string) ([]string, error) {
 func lines(r io.Reader) (ls []string, _ error) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-		l := scanner.Text()
-		if len(l) > 0 {
-			ls = append(ls, l)
+		l := scanner.Bytes()
+		if len(l) == 0 {
+      continue
 		}
+
+    bs, n, err := transform.Bytes(datEncoding.NewDecoder(), l)
+    if err != nil {
+      log.Printf("Could not convert EUC string %q to UTF-8, position %v: %v. Ignored.", string(l), n, err)
+      continue
+    }
+
+    ls = append(ls, string(bs))
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
