@@ -1,8 +1,8 @@
 package jbbsreader
 
 import (
+	"github.com/kylelemons/godebug/pretty"
 	"testing"
-  "github.com/kylelemons/godebug/pretty"
 )
 
 func TestNewBoard(t *testing.T) {
@@ -71,9 +71,9 @@ func TestThreads(t *testing.T) {
 			continue
 		}
 		got := threads[0]
-    if cmp := pretty.Compare(got, tc.want); cmp != "" {
-      t.Errorf("threads differ:\n%s", cmp)
-    }
+		if cmp := pretty.Compare(got, tc.want); cmp != "" {
+			t.Errorf("threads differ:\n%s", cmp)
+		}
 	}
 }
 
@@ -154,9 +154,9 @@ func TestResponses(t *testing.T) {
 			continue
 		}
 		got := responses[0]
-    if cmp := pretty.Compare(got, tc.want); cmp != "" {
-      t.Errorf("responses differ:\n%s", cmp)
-    }
+		if cmp := pretty.Compare(got, tc.want); cmp != "" {
+			t.Errorf("responses differ:\n%s", cmp)
+		}
 	}
 }
 

@@ -11,8 +11,8 @@ import (
 
 // The global rate per minute limit for requests to JBBS.
 var (
-  ratePerMinuteLimit = 3
-  burst = 3
+	ratePerMinuteLimit = 3
+	burst              = 3
 )
 
 func init() {
@@ -27,9 +27,9 @@ var datEncoding = japanese.EUCJP
 // SetGlobalRateLimitRPM sets JBBS requests rate per limit, allowing some bursts.
 func SetGlobalRateLimitRPM(rpm int, burst int) {
 	rpmThrottle = make(chan bool, burst)
-  for i := 0; i < burst; i++ {
-    rpmThrottle <- true
-  }
+	for i := 0; i < burst; i++ {
+		rpmThrottle <- true
+	}
 
 	go func() {
 		for _ = range time.Tick(time.Minute / time.Duration(rpm)) {

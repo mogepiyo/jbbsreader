@@ -66,76 +66,76 @@ func (b *Board) Threads() (threads []*Thread, _ error) {
 // FeedNewResponses continuously feeds new responses in all threads of the board to the chan.
 // b.Category and b.ID must be set.
 func (b *Board) FeedNewResponses() (<-chan *Response, <-chan error) {
-  resp, errc := make(chan *Response), make(chan error, 1)
+	resp, errc := make(chan *Response), make(chan error, 1)
 
-  go func() {
-    defer func() {
-      close(resp)
-      close(errc)
-    }()
+	go func() {
+		defer func() {
+			close(resp)
+			close(errc)
+		}()
 
-    known := make(map[string]bool)
+		known := make(map[string]bool)
 
-    // Load initial known responses.
-    respChan, errChan := b.FeedResponsesOnce()
-    for r := range respChan {
-      known[key(r)] = true
-    }
-    if err := <-errChan; err != nil {
-      errc <- err
-      return
-    }
+		// Load initial known responses.
+		respChan, errChan := b.FeedResponsesOnce()
+		for r := range respChan {
+			known[key(r)] = true
+		}
+		if err := <-errChan; err != nil {
+			errc <- err
+			return
+		}
 
-    // Poll JBBS and emit unknown responses.
-    for {
-      respChan, errChan = b.FeedResponsesOnce()
-      for r := range respChan {
-        if !known[key(r)] {
-          known[key(r)] = true
-          resp <- r
-        }
-      }
-      if err := <-errChan; err != nil {
-        errc <- err
-        return
-      }
-    }
-  }()
+		// Poll JBBS and emit unknown responses.
+		for {
+			respChan, errChan = b.FeedResponsesOnce()
+			for r := range respChan {
+				if !known[key(r)] {
+					known[key(r)] = true
+					resp <- r
+				}
+			}
+			if err := <-errChan; err != nil {
+				errc <- err
+				return
+			}
+		}
+	}()
 
-  return resp, errc
+	return resp, errc
 }
 
 // FeedResponsesOnce reads all responses in all threads of the board to the chan.
 // b.Category and b.ID must be set.
 func (b *Board) FeedResponsesOnce() (<-chan *Response, <-chan error) {
-  resp, errc := make(chan *Response), make(chan error, 1)
+	resp, errc := make(chan *Response), make(chan error, 1)
 
-  go func() {
-    defer func() {
-      close(resp)
-      close(errc)
-    }()
+	go func() {
+		defer func() {
+			close(resp)
+			close(errc)
+		}()
 
-    threads, err := b.Threads()
-    if err != nil {
-      errc <- err
-      return
-    }
+		threads, err := b.Threads()
+		if err != nil {
+			errc <- err
+			return
+		}
 
-    for _, t := range threads {
-      responses, err := t.Responses()
-      if err != nil {
-        errc <- err
-        return
-      }
+		for _, t := range threads {
+			responses, err := t.Responses()
+			if err != nil {
+				errc <- err
+				return
+			}
 
-      for _, r := range responses {
-        resp <- r
-      }
-    }
-  }()
+			for _, r := range responses {
+				resp <- r
+			}
+		}
+	}()
 
-  return resp, errc
+	return resp, errc
 }
 
 // Thread represents the thread that can be accessed by the following URL.
@@ -228,5 +228,5 @@ func newResponse(parent *Thread, line string) *Response {
 }
 
 func key(r *Response) string {
-  return fmt.Sprintf("%s.%v", r.ParentThread.ID, r.ID)
+	return fmt.Sprintf("%s.%v", r.ParentThread.ID, r.ID)
 }
