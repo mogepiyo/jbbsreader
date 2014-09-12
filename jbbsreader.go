@@ -42,6 +42,7 @@ func NewBoard(category, id string) *Board {
 }
 
 // Threads returns the list of threads in the board.
+// b.Category and b.ID must be set.
 func (b *Board) Threads() (threads []*Thread, _ error) {
 	subjectURL := fmt.Sprintf(jbbsSubjectURLFormat, b.Category, b.ID)
 
@@ -66,7 +67,7 @@ func (b *Board) Threads() (threads []*Thread, _ error) {
 // Thread represents the thread that can be accessed by the following URL.
 // 'http://jbbs.shitaraba.net/bbs/read.cgi/[board-category]/[board-id]/[thread-id]'
 type Thread struct {
-	parentBoard  *Board
+	ParentBoard  *Board
 	ID           string
 	Title        string // The title of the thread.
 	NumResponses uint   // The number of responses in the thread.
@@ -86,7 +87,7 @@ func newThread(parent *Board, line string) *Thread {
 	}
 
 	return &Thread{
-		parentBoard:  parent,
+		ParentBoard:  parent,
 		ID:           parts[1],
 		Title:        parts[2],
 		NumResponses: uint(numResponses),
@@ -94,8 +95,9 @@ func newThread(parent *Board, line string) *Thread {
 }
 
 // Responses gets all responses in the thread.
+// t.ParentBoard and t.ID must be present.
 func (t *Thread) Responses() (responses []*Response, _ error) {
-	datURL := fmt.Sprintf(jbbsDatURLFormat, t.parentBoard.Category, t.parentBoard.ID, t.ID)
+	datURL := fmt.Sprintf(jbbsDatURLFormat, t.ParentBoard.Category, t.ParentBoard.ID, t.ID)
 
 	// Read from JBBS.
 	lines, err := getLines(datURL)
@@ -117,7 +119,7 @@ func (t *Thread) Responses() (responses []*Response, _ error) {
 
 // Response represents each response written to JBBS threads.
 type Response struct {
-	parentThread *Thread
+	ParentThread *Thread
 	ID           uint   // The ID of the response, which is the same as the response number.
 	Name         string // The name of the author.
 	Email        string // The email address of the author.
@@ -140,7 +142,7 @@ func newResponse(parent *Thread, line string) *Response {
 	}
 
 	return &Response{
-		parentThread: parent,
+		ParentThread: parent,
 		ID:           uint(id),
 		Name:         parts[2],
 		Email:        parts[3],

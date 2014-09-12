@@ -37,7 +37,7 @@ func TestThreads(t *testing.T) {
 		desc: "complex",
 		in:   "999.cgi,hoge.cgi,(20)fuga(42)",
 		want: &Thread{
-			parentBoard:  b,
+			ParentBoard:  b,
 			ID:           "999",
 			Title:        "hoge.cgi,(20)fuga",
 			NumResponses: 42,
@@ -88,7 +88,7 @@ func TestResponsesURL(t *testing.T) {
 
 	b := NewBoard("computer", "12345")
 	th := &Thread{
-		parentBoard: b,
+		ParentBoard: b,
 		ID:          "67890",
 	}
 	th.Responses()
@@ -97,7 +97,7 @@ func TestResponsesURL(t *testing.T) {
 func TestResponses(t *testing.T) {
 	b := NewBoard("computer", "12345")
 	th := &Thread{
-		parentBoard: b,
+		ParentBoard: b,
 		ID:          "67890",
 	}
 
@@ -118,7 +118,7 @@ func TestResponses(t *testing.T) {
 		desc: "full",
 		in:   "123<>name<>mail<>date<>content<>title<>id",
 		want: &Response{
-			parentThread: th,
+			ParentThread: th,
 			ID:           123,
 			Name:         "name",
 			Email:        "mail",
@@ -131,7 +131,7 @@ func TestResponses(t *testing.T) {
 		desc: "zero",
 		in:   "0<><><><><><>",
 		want: &Response{
-			parentThread: th,
+			ParentThread: th,
 		},
 	}}
 
